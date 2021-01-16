@@ -1,3 +1,3 @@
-C:/Users/aurba/CLionProjects/space_invaders/cmake-build-debug/CMakeFiles/space_invaders.dir
-C:/Users/aurba/CLionProjects/space_invaders/cmake-build-debug/CMakeFiles/edit_cache.dir
-C:/Users/aurba/CLionProjects/space_invaders/cmake-build-debug/CMakeFiles/rebuild_cache.dir
+C:/Users/Xenono/CLionProjects/space_invaders/cmake-build-debug/CMakeFiles/space_invaders.dir
+C:/Users/Xenono/CLionProjects/space_invaders/cmake-build-debug/CMakeFiles/edit_cache.dir
+C:/Users/Xenono/CLionProjects/space_invaders/cmake-build-debug/CMakeFiles/rebuild_cache.dir

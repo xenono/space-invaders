@@ -4,6 +4,7 @@
 #include <SFML/System.h>
 #include <SFML/Audio.h>
 #include <SFML/Window.h>
+#include <time.h>
 
 // Sprite object, basically every object on the screen
 typedef struct {
@@ -17,28 +18,49 @@ typedef struct {
 // Function to set up basic values for every Sprite
 Sprite createSprite(char textureName[20], int isAlive, sfVector2f startingPosition, double speed);
 
+void spriteDie(Sprite sprite);
+
 int main() {
     char windowTitle[20] = "CSFML WINDOW";
-    sfVideoMode mode = {800, 600, 32};
+    sfVideoMode windowSize = {1000, 800, 32};
     sfRenderWindow *window;
     sfEvent event;
 
+    time_t start, end;
+    double timeDifference;
+
+    time(&start);
+
+    // Spaceship shoot sound
+    sfSoundBuffer* shootBuffer;
+    shootBuffer = sfSoundBuffer_createFromFile("artillery.wav");
+    sfSound* shootSound;
+    shootSound = sfSound_create();
+    sfSound_setBuffer(shootSound, shootBuffer);
+
+    // Invader explosion sound
+    sfSoundBuffer* invaderExplosionBuffer;
+    invaderExplosionBuffer = sfSoundBuffer_createFromFile("Explosion+7.wav");
+    sfSound* invaderExplosionSound;
+    invaderExplosionSound = sfSound_create();
+    sfSound_setBuffer(invaderExplosionSound, invaderExplosionBuffer);
+
     // Setting up window
-    window = sfRenderWindow_create(mode, windowTitle, sfClose, NULL);
+    window = sfRenderWindow_create(windowSize, windowTitle, sfClose, NULL);
 
     // Setting up player's spaceship
-    sfVector2f playerStartingPosition = {368, 500};
+    sfVector2f playerStartingPosition = {windowSize.width - 32, 700};
 
     // Moves spaceship to the window border if it tries to go outside
-    sfVector2f spaceshipSticksToLeftBorder = {0, 500};
-    sfVector2f spaceshipSticksToRightBorder = {736, 500};
+    sfVector2f spaceshipSticksToLeftBorder = {0, 700};
+    sfVector2f spaceshipSticksToRightBorder = {736, 700};
     Sprite player;
-    player = createSprite("player.png", 1, playerStartingPosition, 0.3);
+    player = createSprite("player.png", 1, playerStartingPosition, 0.2);
     sfSprite_setPosition(player.pointer, playerStartingPosition);
 
     // Setting up spaceship's bullet
     Sprite bullet;
-    bullet = createSprite("bullet.png", 0, playerStartingPosition, 0.4);
+    bullet = createSprite("bullet.png", 0, playerStartingPosition, 0.1);
     sfSprite_setPosition(bullet.pointer, playerStartingPosition);
 
     // Setting up Earth Invaders
@@ -60,10 +82,11 @@ int main() {
             if (event.type == sfEvtClosed) {
                 sfRenderWindow_close(window);
             }
-            if (event.key.code == sfKeySpace && bullet.isAlive == 0) {
+            if (sfKeyboard_isKeyPressed(sfKeySpace) && bullet.isAlive == 0) {
                 bullet.isAlive = 1;
                 bullet.position.x = player.position.x + 16.00;
                 bullet.position.y = player.position.y - 32.00;
+                sfSound_play(shootSound);
                 sfSprite_setPosition(bullet.pointer, bullet.position);
             }
         }
@@ -78,13 +101,31 @@ int main() {
         }
 
         /* Checks if player is not out of border */
-        if (player.position.x + 64 >= 800) {
-            player.position.x = 800 - 64;
-            sfSprite_setPosition(player.pointer, spaceshipSticksToRightBorder);
+        if (player.position.x + 64 >= windowSize.width) {
+            player.position.x = windowSize.width - 64;
+            sfSprite_setPosition(player.pointer, player.position);
         } else if (player.position.x <= 0) {
             player.position.x = 0;
-            sfSprite_setPosition(player.pointer, spaceshipSticksToLeftBorder);
+            sfSprite_setPosition(player.pointer, player.position);
         }
+
+        // Moves invaders
+        time(&end);
+        timeDifference = difftime(end, start);
+//        if (timeDifference >= 2.5) {
+//            time(&start);
+//            timeDifference = 0;
+        for (int i = 0; i < 20; i++) {
+            if (Invaders[i].isAlive == 1) {
+                Invaders[i].position.x += 0.01;
+                if (Invaders[i].position.x + 48 >= windowSize.width) {
+                    Invaders[i].position.x = 10;
+                    Invaders[i].position.y += 72;
+                    sfSprite_setPosition(Invaders[i].pointer, Invaders[i].position);
+                }
+            }
+        }
+//        }
 
         // Updates window
         sfRenderWindow_clear(window, sfBlack);
@@ -96,12 +137,19 @@ int main() {
         }
         // Checks collision between bullet and each Invader
         for (int i = 0; i < 20; i++) {
-            if (Invaders[i].isAlive == 1 && bullet.position.x >= Invaders[i].position.x &&
-                bullet.position.x <= Invaders[i].position.x + 48) {
-                if (bullet.position.y <= Invaders[i].position.y + 100) {
-                    printf("%f ", bullet.position.y);
+            // First checks if invader is alive then checks for if left or right border of the bullet is between two borders of the invader's sprite
+            if (Invaders[i].isAlive == 1 && bullet.isAlive == 1 &&
+                ((Invaders[i].position.x <= bullet.position.x && bullet.position.x <= Invaders[i].position.x + 35) ||
+                 (Invaders[i].position.x <= bullet.position.x + 20 &&
+                  bullet.position.x + 20 <= Invaders[i].position.x + 35))) {
+                // If x position matches then it checks if bullet's Y is less than Invader's bottom border Y
+                if (bullet.position.y <= Invaders[i].position.y + 32) {
+                    // If bullet hits, invader and bullet dies
                     Invaders[i].isAlive = 0;
                     bullet.isAlive = 0;
+                    bullet.position.y = 950;
+                    sfSound_play(invaderExplosionSound);
+                    sfSprite_setPosition(bullet.pointer, bullet.position);
                 }
             }
         }
@@ -112,6 +160,7 @@ int main() {
         // Draws all alive invaders
         for (int i = 0; i < 20; ++i) {
             if (Invaders[i].isAlive != 0) {
+                sfSprite_setPosition(Invaders[i].pointer, Invaders[i].position);
                 sfRenderWindow_drawSprite(window, Invaders[i].pointer, NULL);
             }
         }
@@ -124,6 +173,7 @@ int main() {
     sfTexture_destroy(player.texture);
     sfSprite_destroy(bullet.pointer);
     sfTexture_destroy(bullet.texture);
+    sfMusic_destroy(shootSound);
     sfRenderWindow_destroy(window);
     return 0;
 }
@@ -137,4 +187,11 @@ Sprite createSprite(char textureName[20], int isAlive, sfVector2f startingPositi
     sprite.texture = sfTexture_createFromFile(textureName, NULL);
     sfSprite_setTexture(sprite.pointer, sprite.texture, sfTrue);
     return sprite;
+}
+
+void spriteDie(Sprite sprite) {
+    sprite.isAlive = 0;
+    sprite.position.x = 0;
+    sprite.position.y = 0;
+    sfSprite_setPosition(sprite.pointer, sprite.position);
 }

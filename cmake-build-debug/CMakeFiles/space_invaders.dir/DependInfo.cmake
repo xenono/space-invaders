@@ -4,7 +4,7 @@ set(CMAKE_DEPENDS_LANGUAGES
   )
 # The set of files for implicit dependencies of each language:
 set(CMAKE_DEPENDS_CHECK_C
-  "C:/Users/aurba/CLionProjects/space_invaders/main.c" "C:/Users/aurba/CLionProjects/space_invaders/cmake-build-debug/CMakeFiles/space_invaders.dir/main.c.obj"
+  "C:/Users/Xenono/CLionProjects/space_invaders/main.c" "C:/Users/Xenono/CLionProjects/space_invaders/cmake-build-debug/CMakeFiles/space_invaders.dir/main.c.obj"
   )
 set(CMAKE_C_COMPILER_ID "MSVC")
 
