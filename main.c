@@ -5,6 +5,7 @@
 #include <SFML/Audio.h>
 #include <SFML/Window.h>
 #include <time.h>
+#include <stdlib.h>
 
 // Sprite object, basically every object on the screen
 typedef struct {
@@ -19,34 +20,55 @@ typedef struct {
 Sprite createSprite(char textureName[20], int isAlive, sfVector2f startingPosition, double speed);
 
 void spriteDie(Sprite sprite);
+int generateNumberInRange(int lower, int upper);
 
 int main() {
-    char windowTitle[20] = "CSFML WINDOW";
+    char windowTitle[20] = "Space Invaders";
     sfVideoMode windowSize = {1000, 800, 32};
     sfRenderWindow *window;
     sfEvent event;
 
-    time_t start, end;
-    double timeDifference;
+    // Setting up window
+    window = sfRenderWindow_create(windowSize, windowTitle, sfClose, NULL);
+    sfTexture* backgroundTexture = sfTexture_createFromFile("background.jpg",NULL);
+    sfSprite* backgroundSprite = sfSprite_create();
+    sfVector2f backgroundPos = {0,0};
+    sfSprite_setTexture(backgroundSprite, backgroundTexture, sfTrue);
+    sfSprite_setPosition(backgroundSprite, backgroundPos);
 
+    // Initialize Time
+    time_t start, end;
+    time_t now = time(0);
+    int lowerRange = 2;
+    int upperRange = 6; // upperRange + 1
+    double timeDifference;
+    int timeInterval = generateNumberInRange(lowerRange, upperRange);
     time(&start);
 
+
+
     // Spaceship shoot sound
-    sfSoundBuffer* shootBuffer;
+    sfSoundBuffer *shootBuffer;
+    sfSound *shootSound;
     shootBuffer = sfSoundBuffer_createFromFile("artillery.wav");
-    sfSound* shootSound;
     shootSound = sfSound_create();
     sfSound_setBuffer(shootSound, shootBuffer);
 
     // Invader explosion sound
-    sfSoundBuffer* invaderExplosionBuffer;
+    sfSoundBuffer *invaderExplosionBuffer;
+    sfSound *invaderExplosionSound;
     invaderExplosionBuffer = sfSoundBuffer_createFromFile("Explosion+7.wav");
-    sfSound* invaderExplosionSound;
     invaderExplosionSound = sfSound_create();
     sfSound_setBuffer(invaderExplosionSound, invaderExplosionBuffer);
 
-    // Setting up window
-    window = sfRenderWindow_create(windowSize, windowTitle, sfClose, NULL);
+    // Laser shoot sound
+    sfSoundBuffer *laserShootBuffer;
+    sfSound *laserShootSound;
+    float volume = 10;
+    laserShootBuffer = sfSoundBuffer_createFromFile("Laser.wav");
+    laserShootSound = sfSound_create();
+    sfSound_setBuffer(laserShootSound, laserShootBuffer);
+    sfSound_setVolume(laserShootSound, volume);
 
     // Setting up player's spaceship
     sfVector2f playerStartingPosition = {windowSize.width - 32, 700};
@@ -59,22 +81,27 @@ int main() {
     sfSprite_setPosition(player.pointer, playerStartingPosition);
 
     // Setting up spaceship's bullet
+    int randomInvader;
     Sprite bullet;
     bullet = createSprite("bullet.png", 0, playerStartingPosition, 0.1);
     sfSprite_setPosition(bullet.pointer, playerStartingPosition);
 
-    // Setting up Earth Invaders
+    // Setting up Earth Invaders x
     Sprite Invaders[20];
     int invaderPositioner = 50;
     for (int i = 0; i < 20; ++i) {
         sfVector2f invaderStartingPosition = {10 + (i % 5 * (invaderPositioner + 30)), 35};
-        Invaders[i] = createSprite("ufo.png", 1, invaderStartingPosition, 0.1);
+        Invaders[i] = createSprite("ufo.png", 1, invaderStartingPosition, 0.025);
         if (i >= 5) {
             invaderStartingPosition.y = (i / 5) * 70 + invaderStartingPosition.y;
         }
         Invaders[i].position = invaderStartingPosition;
         sfSprite_setPosition(Invaders[i].pointer, invaderStartingPosition);
     }
+    // Setting up Invaders' lasers
+    Sprite laser;
+    laser = createSprite("beams.png", 0, Invaders[0].position, 0.4);
+    sfSprite_setPosition(laser.pointer, laser.position);
 
 
     while (sfRenderWindow_isOpen(window)) {
@@ -109,15 +136,31 @@ int main() {
             sfSprite_setPosition(player.pointer, player.position);
         }
 
-        // Moves invaders
+
         time(&end);
         timeDifference = difftime(end, start);
-//        if (timeDifference >= 2.5) {
-//            time(&start);
-//            timeDifference = 0;
+        if (timeDifference >= timeInterval) {
+            time(&start);
+            timeDifference = 0;
+            timeInterval = generateNumberInRange(lowerRange, upperRange);
+            printf("%d", timeInterval);
+        }
+
+        if(laser.isAlive == 0){
+            randomInvader = rand() % 20;
+            laser.isAlive = 1;
+            laser.position = Invaders[randomInvader].position;
+            laser.position.x += 24;
+            laser.position.y += 48;
+            sfSprite_setPosition(laser.pointer, laser.position);
+            sfSound_play(laserShootSound);
+        }
+
+
+
         for (int i = 0; i < 20; i++) {
             if (Invaders[i].isAlive == 1) {
-                Invaders[i].position.x += 0.01;
+                Invaders[i].position.x += Invaders[i].speed;
                 if (Invaders[i].position.x + 48 >= windowSize.width) {
                     Invaders[i].position.x = 10;
                     Invaders[i].position.y += 72;
@@ -125,15 +168,20 @@ int main() {
                 }
             }
         }
-//        }
-
+        // Drawing Everything
         // Updates window
         sfRenderWindow_clear(window, sfBlack);
+        sfRenderWindow_drawSprite(window, backgroundSprite, NULL);
         // Updates bullet
         if (bullet.isAlive == 1) {
             bullet.position.y -= bullet.speed;
             sfSprite_setPosition(bullet.pointer, bullet.position);
             sfRenderWindow_drawSprite(window, bullet.pointer, NULL);
+        }
+        if(laser.isAlive == 1){
+            laser.position.y += laser.speed;
+            sfSprite_setPosition(laser.pointer, laser.position);
+            sfRenderWindow_drawSprite(window, laser.pointer, NULL);
         }
         // Checks collision between bullet and each Invader
         for (int i = 0; i < 20; i++) {
@@ -153,9 +201,18 @@ int main() {
                 }
             }
         }
+        // Check if player loses
+        for(int i = 0; i< 20; i++){
+            if(Invaders[i].isAlive == 1 && Invaders[i].position.y + 48 >= 700){
+                printf("END?");
+            }
+        }
         // Destroys bullet if its out of top border
         if (bullet.position.y <= -64) {
             bullet.isAlive = 0;
+        }
+        if(laser.position.y >= windowSize.height + 30){
+            laser.isAlive = 0;
         }
         // Draws all alive invaders
         for (int i = 0; i < 20; ++i) {
@@ -194,4 +251,10 @@ void spriteDie(Sprite sprite) {
     sprite.position.x = 0;
     sprite.position.y = 0;
     sfSprite_setPosition(sprite.pointer, sprite.position);
+}
+
+int generateNumberInRange(int lower, int upper){
+    int number;
+    number = (rand() % (upper - lower)) + lower;
+    return number;
 }
