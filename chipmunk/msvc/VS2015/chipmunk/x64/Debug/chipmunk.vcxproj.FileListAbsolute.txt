@@ -1,0 +1,2 @@
+C:\Users\Xenono\CLionProjects\space_invaders\chipmunk\msvc\VS2015\chipmunk\x64\Debug\chipmunk.lib
+C:\Users\Xenono\CLionProjects\space_invaders\chipmunk\msvc\VS2015\chipmunk\x64\Debug\chipmunk.pdb

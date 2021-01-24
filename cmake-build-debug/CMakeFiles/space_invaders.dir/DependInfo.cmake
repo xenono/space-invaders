@@ -5,11 +5,13 @@ set(CMAKE_DEPENDS_LANGUAGES
 # The set of files for implicit dependencies of each language:
 set(CMAKE_DEPENDS_CHECK_C
   "C:/Users/Xenono/CLionProjects/space_invaders/main.c" "C:/Users/Xenono/CLionProjects/space_invaders/cmake-build-debug/CMakeFiles/space_invaders.dir/main.c.obj"
+  "C:/Users/Xenono/CLionProjects/space_invaders/utils.c" "C:/Users/Xenono/CLionProjects/space_invaders/cmake-build-debug/CMakeFiles/space_invaders.dir/utils.c.obj"
   )
 set(CMAKE_C_COMPILER_ID "MSVC")
 
 # The include file search paths:
 set(CMAKE_C_TARGET_INCLUDE_PATH
+  "../chipmunk/include"
   "../CSFML/include"
   )
 

@@ -24,6 +24,7 @@
 				<Option type="1"/>
 				<Option compiler="msvc8"/>
 				<Compiler>
+					<Add directory="C:/Users/Xenono/CLionProjects/space_invaders/chipmunk/include"/>
 					<Add directory="C:/Users/Xenono/CLionProjects/space_invaders/CSFML/include"/>
 					<Add directory="C:\Program Files (x86)\Microsoft Visual Studio\2019\Professional\VC\Tools\MSVC\14.28.29333\ATLMFC\include"/>
 					<Add directory="C:\Program Files (x86)\Microsoft Visual Studio\2019\Professional\VC\Tools\MSVC\14.28.29333\include"/>
@@ -48,6 +49,7 @@
 				<Option type="1"/>
 				<Option compiler="msvc8"/>
 				<Compiler>
+					<Add directory="C:/Users/Xenono/CLionProjects/space_invaders/chipmunk/include"/>
 					<Add directory="C:/Users/Xenono/CLionProjects/space_invaders/CSFML/include"/>
 					<Add directory="C:\Program Files (x86)\Microsoft Visual Studio\2019\Professional\VC\Tools\MSVC\14.28.29333\ATLMFC\include"/>
 					<Add directory="C:\Program Files (x86)\Microsoft Visual Studio\2019\Professional\VC\Tools\MSVC\14.28.29333\include"/>
@@ -87,6 +89,15 @@
 			</Target>
 		</Build>
 		<Unit filename="C:/Users/Xenono/CLionProjects/space_invaders/main.c">
+			<Option target="space_invaders"/>
+		</Unit>
+		<Unit filename="C:/Users/Xenono/CLionProjects/space_invaders/objects.h">
+			<Option target="space_invaders"/>
+		</Unit>
+		<Unit filename="C:/Users/Xenono/CLionProjects/space_invaders/utils.c">
+			<Option target="space_invaders"/>
+		</Unit>
+		<Unit filename="C:/Users/Xenono/CLionProjects/space_invaders/utils.h">
 			<Option target="space_invaders"/>
 		</Unit>
 		<Unit filename="C:/Users/Xenono/CLionProjects/space_invaders/CMakeLists.txt">

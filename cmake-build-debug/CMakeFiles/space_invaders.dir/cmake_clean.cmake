@@ -1,5 +1,6 @@
 file(REMOVE_RECURSE
   "CMakeFiles/space_invaders.dir/main.c.obj"
+  "CMakeFiles/space_invaders.dir/utils.c.obj"
   "space_invaders.exe"
   "space_invaders.exe.manifest"
   "space_invaders.lib"
