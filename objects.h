@@ -9,14 +9,18 @@ typedef struct {
     sfSprite *pointer;
     sfTexture *texture;
     sfVector2f position;
-    double speed;
+    float speed;
     int isAlive;
+    float width;
+    float height;
 } Sprite;
 
 typedef struct {
     sfSprite *pointer;
     sfTexture *texture;
     sfVector2f position;
+    int width;
+    int height;
 } StaticSprite;
 
 #endif //SPACE_INVADERS_OBJECTS_H
