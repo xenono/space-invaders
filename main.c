@@ -41,15 +41,17 @@ int main() {
     sfSprite_setPosition(startPageSprite.pointer, startPageSprite.position);
 
     // Play button
-    sfVector2f playButtonPos = {(float) windowSize.width / 2 - 280, 370};
+    sfVector2f playButtonPos = {(float) windowSize.width / 2 - 257, 370};
     StaticSprite playButton = createStaticSprite("playButton.png", playButtonPos, 540, 92);
     sfTexture *playButtonActiveTexture = sfTexture_createFromFile("playButtonActive.png", NULL);
 
     sfSprite_setPosition(playButton.pointer, playButton.position);
 
     // Exit button
-    sfVector2f exitButtonPos = {(float) windowSize.width / 2 - 280, 570};
+    sfVector2f exitButtonPos = {(float) windowSize.width / 2 - 257, 570};
     StaticSprite exitButton = createStaticSprite("exitButton.png", exitButtonPos, 540, 92);
+    sfTexture *exitButtonActiveTexture = sfTexture_createFromFile("exitButtonActive.png", NULL);
+
 
     sfSprite_setPosition(exitButton.pointer, exitButton.position);
 
@@ -91,20 +93,35 @@ int main() {
     sfSound_setBuffer(laserShootSound, laserShootBuffer);
     sfSound_setVolume(laserShootSound, volume);
 
-    // Setting up player's spaceship
-    sfVector2f playerStartingPosition = {(float) windowSize.width - 32, 700};
+
+
+    // Score text
+    int score = 0;
+
+    sfText *scoreText = sfText_create();
+    sfVector2f scoreTextPosition = {10, (float)windowSize.height - 40};
+    char scoreTextString[20] ;
+    snprintf(scoreTextString, 20, "Score: %d", score);
+    sfText_setString(scoreText, scoreTextString);
+    sfText_setFillColor(scoreText, sfWhite);
+    sfText_setFont(scoreText, font);
+    sfText_setCharacterSize(scoreText, 30);
+    sfText_setPosition(scoreText, scoreTextPosition);
 
     // Moves spaceship to the window border if it tries to go outside
+    // Setting up player's spaceship
+    sfVector2f playerStartingPosition = {(float) windowSize.width / 2 - 32, 700};
     sfVector2f spaceshipSticksToLeftBorder = {0, 700};
     sfVector2f spaceshipSticksToRightBorder = {736, 700};
     Sprite player;
     player = createSprite("player.png", 1, playerStartingPosition, 0.2, 64, 64);
     sfSprite_setPosition(player.pointer, playerStartingPosition);
 
+
     // Setting up spaceship's bullet
     int randomInvader;
     Sprite bullet;
-    bullet = createSprite("bullet.png", 0, playerStartingPosition, 0.1, 20, 32);
+    bullet = createSprite("bullet.png", 0, playerStartingPosition, 0.1, 10, 26);
     sfSprite_setPosition(bullet.pointer, playerStartingPosition);
 
     // Setting up Earth Invaders x
@@ -127,66 +144,124 @@ int main() {
 
 
     while (sfRenderWindow_isOpen(window)) {
+        mouseCoordinates.position.x = (float)sfMouse_getPosition(window).x;
+        mouseCoordinates.position.y = (float)sfMouse_getPosition(window).y;
         while (sfRenderWindow_pollEvent(window, &event)) {
             if (event.type == sfEvtClosed) {
                 sfRenderWindow_close(window);
             }
-            if (sfKeyboard_isKeyPressed(sfKeyEnter) && gameStatus == Starting || gameStatus == GameOver) {
-                laser.position.x = 0;
-                laser.position.y = 0;
-                player.isAlive = 1;
-                gameStatus = Running;
-            };
             if (sfKeyboard_isKeyPressed(sfKeySpace) && bullet.isAlive == 0 && gameStatus == Running) {
                 bullet.isAlive = 1;
-                bullet.position.x = player.position.x + 16;
-                bullet.position.y = player.position.y - 32;
+                bullet.position.x = player.position.x + player.width / 2 - bullet.width / 2;
+                bullet.position.y = player.position.y - bullet.height;
                 sfSound_play(shootSound);
                 sfSprite_setPosition(bullet.pointer, bullet.position);
             };
+            if(sfMouse_isButtonPressed(sfMouseLeft) && (gameStatus == Starting || gameStatus == GameOver)){
+                if(checkCollisionStatic(mouseCoordinates,exitButton))
+                    sfRenderWindow_close(window);
+                if(checkCollisionStatic(mouseCoordinates,playButton)) {
+                    // Place laser out of window
+                    laser.position.x = -64;
+                    laser.position.y = -64;
+                    player.isAlive = 1;
+                    score = 0;
+                    snprintf(scoreTextString, 20, "Score: %d", score);
+                    sfText_setString(scoreText, scoreTextString);
+                    gameStatus = Running;
+                }
+            }
 
         }
         if (gameStatus == Starting) {
+
             mouseCoordinates.position.x = (float)sfMouse_getPosition(window).x;
             mouseCoordinates.position.y = (float)sfMouse_getPosition(window).y;
             if (sfSprite_getTexture(playButton.pointer) == playButtonActiveTexture) {
                 sfSprite_setTexture(playButton.pointer, playButton.texture, sfTrue);
             }
+            if (sfSprite_getTexture(exitButton.pointer) == exitButtonActiveTexture) {
+                sfSprite_setTexture(exitButton.pointer, exitButton.texture, sfTrue);
+            }
             sfRenderWindow_clear(window, sfBlack);
             sfRenderWindow_drawSprite(window, background.pointer, NULL);
             sfRenderWindow_drawSprite(window, startPageSprite.pointer, NULL);
-//            if (mouseCoordinates.x >= playButton.position.x + 10.0 &&
-//                mouseCoordinates.x <= playButton.position.x + 530.0) {
-//                if (mouseCoordinates.y <= playButton.position.y + 85.0 &&
-//                    mouseCoordinates.y >= playButton.position.y + 10.0) {
-//                    sfSprite_setTexture(playButton.pointer, playButtonActiveTexture, sfTrue);
-//                }
-//            }
 
-//            checkCollisionStatic(playButton,mouseCoordinates);
             if(checkCollisionStatic(mouseCoordinates,playButton)){
                 sfSprite_setTexture(playButton.pointer, playButtonActiveTexture, sfTrue);
-
+            }
+            if(checkCollisionStatic(mouseCoordinates,exitButton)){
+                sfSprite_setTexture(exitButton.pointer, exitButtonActiveTexture, sfTrue);
             }
             sfRenderWindow_drawSprite(window, playButton.pointer, NULL);
             sfRenderWindow_drawSprite(window, exitButton.pointer, NULL);
             sfRenderWindow_display(window);
             continue;
-        } else if (gameStatus == GameOver) {
-            sfRenderWindow_clear(window, sfBlack);
-            sfText *startButtonText = sfText_create();
-            sfVector2f startButtonTextPosition = {0, (float) windowSize.height / 2};
-            sfText_setString(startButtonText, "Press Enter to play");
-            sfText_setFillColor(startButtonText, sfWhite);
-            sfText_setFont(startButtonText, font);
-            sfText_setCharacterSize(startButtonText, 50);
-            startButtonTextPosition.x =
-                    ((float) windowSize.width / 2) - (sfText_getLocalBounds(startButtonText).width / 2);
-            sfText_setPosition(startButtonText, startButtonTextPosition);
 
-            sfRenderWindow_drawText(window, startButtonText, NULL);
+        } else if (gameStatus == GameOver) {
+
+            // Reset Game Variables to initial
+            for(int i = 0; i< 20; i++){
+                sfVector2f invaderStartingPosition = {(float) 10 + (i % 5 * (invaderPositioner + 30)), 35};
+                if (i >= 5) {
+                    invaderStartingPosition.y = (i / 5) * 70 + invaderStartingPosition.y;
+                }
+                Invaders[i].position = invaderStartingPosition;
+                Invaders[i].isAlive = True;
+                sfSprite_setPosition(Invaders[i].pointer, invaderStartingPosition);
+            }
+            player.position = playerStartingPosition;
+            bullet.position = playerStartingPosition;
+            bullet.isAlive = False;
+            laser.position = Invaders[0].position;
+            sfSprite_setPosition(player.pointer, playerStartingPosition);
+            sfSprite_setPosition(laser.pointer, laser.position);
+            // End of reset instructions
+
+            // Score text
+            sfText *scoreResultText = sfText_create();
+            snprintf(scoreTextString, 20, "Your score: %d", score);
+            sfText_setString(scoreResultText, scoreTextString);
+            sfText_setFillColor(scoreResultText, sfWhite);
+            sfText_setFont(scoreResultText, font);
+            sfText_setCharacterSize(scoreResultText, 100);
+            sfVector2f scoreResultTextPosition = {windowSize.width / 2 - (sfText_getLocalBounds(scoreResultText).width / 2), (float) 75};
+            sfText_setPosition(scoreResultText, scoreResultTextPosition);
+
+
+            // Click listener
+            mouseCoordinates.position.x = (float)sfMouse_getPosition(window).x;
+            mouseCoordinates.position.y = (float)sfMouse_getPosition(window).y;
+            if (sfSprite_getTexture(playButton.pointer) == playButtonActiveTexture) {
+                sfSprite_setTexture(playButton.pointer, playButton.texture, sfTrue);
+            }
+            if (sfSprite_getTexture(exitButton.pointer) == exitButtonActiveTexture) {
+                sfSprite_setTexture(exitButton.pointer, exitButton.texture, sfTrue);
+            }
+
+            // Draws GameOver screen
+            sfRenderWindow_clear(window, sfBlack);
+            sfRenderWindow_drawSprite(window, background.pointer, NULL);
+
+
+            scoreResultTextPosition.x =
+                    ((float) windowSize.width / 2) - (sfText_getLocalBounds(scoreResultText).width / 2);
+            sfText_setPosition(scoreResultText, scoreResultTextPosition);
+
+
+            if(checkCollisionStatic(mouseCoordinates,playButton)){
+                sfSprite_setTexture(playButton.pointer, playButtonActiveTexture, sfTrue);
+            }
+            if(checkCollisionStatic(mouseCoordinates,exitButton)){
+                sfSprite_setTexture(exitButton.pointer, exitButtonActiveTexture, sfTrue);
+            }
+            sfRenderWindow_drawText(window, scoreResultText, NULL);
+            sfRenderWindow_drawSprite(window, playButton.pointer, NULL);
+            sfRenderWindow_drawSprite(window, exitButton.pointer, NULL);
             sfRenderWindow_display(window);
             continue;
+
+
         }
         /* Moves player on click */
         if (sfKeyboard_isKeyPressed(sfKeyRight)) {
@@ -213,7 +288,6 @@ int main() {
             time(&start);
             timeDifference = 0;
             timeInterval = generateNumberInRange(lowerRange, upperRange);
-            printf("%d", timeInterval);
         }
 
         if (laser.isAlive == 0) {
@@ -257,27 +331,16 @@ int main() {
         }
         // Checks collision between bullet and each Invader
         for (int i = 0; i < 20; i++) {
-            // First checks if invader is alive then checks for if left or right border of the bullet is between two borders of the invader's sprite
-//            if (Invaders[i].isAlive == 1 && bullet.isAlive == 1 &&
-//                ((Invaders[i].position.x <= bullet.position.x && bullet.position.x <= Invaders[i].position.x + 35) ||
-//                 (Invaders[i].position.x <= bullet.position.x + 20 &&
-//                  bullet.position.x + 20 <= Invaders[i].position.x + 35))) {
-//                // If x position matches then it checks if bullet's Y is less than Invader's bottom border Y
-//                if (bullet.position.y <= Invaders[i].position.y + 32) {
-//                    // If bullet hits, invader and bullet dies
-//                    Invaders[i].isAlive = 0;
-//                    bullet.isAlive = 0;
-//                    bullet.position.y = 950;
-//                    sfSound_play(invaderExplosionSound);
-//                    sfSprite_setPosition(bullet.pointer, bullet.position);
-//                }
-//            }
             if (Invaders[i].isAlive == 1 && bullet.isAlive == 1){
                 if(checkCollision(Invaders[i], bullet) == True){
                     Invaders[i].isAlive = 0;
                     bullet.isAlive = 0;
                     bullet.position.y = 950;
+                    score++;
+                    // Update Score string
+                    snprintf(scoreTextString, 20, "Score: %d", score);
                     sfSound_play(invaderExplosionSound);
+                    sfText_setString(scoreText, scoreTextString);
                     sfSprite_setPosition(bullet.pointer, bullet.position);
                 }
             }
@@ -312,6 +375,9 @@ int main() {
         if (player.isAlive == 1) {
             sfRenderWindow_drawSprite(window, player.pointer, NULL);
         }
+        if(gameStatus == Running){
+            sfRenderWindow_drawText(window, scoreText, NULL);
+        }
 
         sfRenderWindow_display(window);
     }
@@ -333,3 +399,4 @@ int main() {
     sfRenderWindow_destroy(window);
     return 0;
 }
+

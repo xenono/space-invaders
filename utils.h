@@ -12,5 +12,4 @@ int generateNumberInRange(int lower, int upper);
 
 int checkCollision(Sprite firstObject,Sprite secondObject);
 int checkCollisionStatic(StaticSprite firstObject, StaticSprite secondObject);
-
 #endif //SPACE_INVADERS_UTILS_H

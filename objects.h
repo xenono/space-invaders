@@ -11,8 +11,8 @@ typedef struct {
     sfVector2f position;
     float speed;
     int isAlive;
-    float width;
-    float height;
+    int width;
+    int height;
 } Sprite;
 
 typedef struct {
