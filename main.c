@@ -44,6 +44,8 @@ int main() {
     sfVector2f playButtonPos = {(float) windowSize.width / 2 - 257, 370};
     StaticSprite playButton = createStaticSprite("playButton.png", playButtonPos, 540, 92);
     sfTexture *playButtonActiveTexture = sfTexture_createFromFile("playButtonActive.png", NULL);
+    sfTexture *playAgainButtonActiveTexture = sfTexture_createFromFile("playAgainButtonActive.png", NULL);
+    sfTexture *playAgainButtonTexture = sfTexture_createFromFile("playAgainButton.png", NULL);
 
     sfSprite_setPosition(playButton.pointer, playButton.position);
 
@@ -67,6 +69,12 @@ int main() {
     double timeDifference;
     int timeInterval = generateNumberInRange(lowerRange, upperRange);
     time(&start);
+
+    // Counts compute power
+    time_t startCounter, endCounter;
+    int frameCounter = 0;
+    double frameCounterTimeDif;
+    time(&startCounter);
 
 
 
@@ -141,9 +149,51 @@ int main() {
     laser = createSprite("beams.png", 0, Invaders[0].position, 0.4, 15, 19);
     sfSprite_setPosition(laser.pointer, laser.position);
 
-
+    // Setting up defences
+    Sprite Defences[30];
+    int counter = 0;
+    int rowCounter = 0;
+    for(int i = 0; i < 24; i++){
+        sfVector2f defencePosition = {100 + (counter * 40) + ((counter / 4) * 160), 560 + (rowCounter * 40)};
+        counter++;
+        Defences[i] = createSprite("defense.png",1,defencePosition,0,40,40);
+        sfSprite_setPosition(Defences[i].pointer, Defences[i].position);
+        if(counter % 12 == 0){
+            counter = 0;
+            rowCounter++;
+        }
+    }
+    counter = 0;
+    for(int i = 24; i <  30; i++){
+        sfVector2f defencePosition = {100 + (counter * 40) + ((counter / 4) * 160), 560 + (rowCounter * 40)};
+        if(i % 2 == 0){
+            counter+=3;
+        } else {
+            counter++;
+        }
+        Defences[i] = createSprite("defense.png",1,defencePosition,0,40,40);
+        sfSprite_setPosition(Defences[i].pointer, Defences[i].position);
+    }
+//    counter = 0;
+//    for(int i = 12; i < 24; i++){
+//        sfVector2f defencePosition = {100 + (counter * 40) + ((counter / 4) * 160), 600};
+//        counter++;
+//        Defences[i] = createSprite("defense.png",1,defencePosition,0,20,20);
+//        sfSprite_setPosition(Defences[i].pointer, Defences[i].position);
+//    }
 
     while (sfRenderWindow_isOpen(window)) {
+
+        time(&endCounter);
+        frameCounterTimeDif = difftime(endCounter,startCounter);
+        if(frameCounterTimeDif <= 1) {
+            frameCounter++;
+        } else {
+            time(&startCounter);
+            printf("player speed: %f\n", (1387.0 / frameCounter));
+            frameCounter = 0;
+        }
+
         mouseCoordinates.position.x = (float)sfMouse_getPosition(window).x;
         mouseCoordinates.position.y = (float)sfMouse_getPosition(window).y;
         while (sfRenderWindow_pollEvent(window, &event)) {
@@ -228,11 +278,13 @@ int main() {
             sfVector2f scoreResultTextPosition = {windowSize.width / 2 - (sfText_getLocalBounds(scoreResultText).width / 2), (float) 75};
             sfText_setPosition(scoreResultText, scoreResultTextPosition);
 
+            playButton.texture = playAgainButtonTexture;
+            sfSprite_setTexture(playButton.pointer, playButton.texture, sfTrue);
 
             // Click listener
             mouseCoordinates.position.x = (float)sfMouse_getPosition(window).x;
             mouseCoordinates.position.y = (float)sfMouse_getPosition(window).y;
-            if (sfSprite_getTexture(playButton.pointer) == playButtonActiveTexture) {
+            if (sfSprite_getTexture(playButton.pointer) == playAgainButtonActiveTexture) {
                 sfSprite_setTexture(playButton.pointer, playButton.texture, sfTrue);
             }
             if (sfSprite_getTexture(exitButton.pointer) == exitButtonActiveTexture) {
@@ -250,7 +302,7 @@ int main() {
 
 
             if(checkCollisionStatic(mouseCoordinates,playButton)){
-                sfSprite_setTexture(playButton.pointer, playButtonActiveTexture, sfTrue);
+                sfSprite_setTexture(playButton.pointer, playAgainButtonActiveTexture, sfTrue);
             }
             if(checkCollisionStatic(mouseCoordinates,exitButton)){
                 sfSprite_setTexture(exitButton.pointer, exitButtonActiveTexture, sfTrue);
@@ -305,7 +357,7 @@ int main() {
 
 
         for (int i = 0; i < 20; i++) {
-            if (Invaders[i].isAlive == 1) {
+            if (Invaders[i].isAlive == True) {
                 Invaders[i].position.x += Invaders[i].speed;
                 if (Invaders[i].position.x + 48 >= (float) windowSize.width) {
                     Invaders[i].position.x = 10;
@@ -319,22 +371,22 @@ int main() {
         sfRenderWindow_clear(window, sfBlack);
         sfRenderWindow_drawSprite(window, background.pointer, NULL);
         // Updates bullet
-        if (bullet.isAlive == 1) {
+        if (bullet.isAlive == True) {
             bullet.position.y -= bullet.speed;
             sfSprite_setPosition(bullet.pointer, bullet.position);
             sfRenderWindow_drawSprite(window, bullet.pointer, NULL);
         }
-        if (laser.isAlive == 1) {
+        if (laser.isAlive == True) {
             laser.position.y += laser.speed;
             sfSprite_setPosition(laser.pointer, laser.position);
             sfRenderWindow_drawSprite(window, laser.pointer, NULL);
         }
         // Checks collision between bullet and each Invader
         for (int i = 0; i < 20; i++) {
-            if (Invaders[i].isAlive == 1 && bullet.isAlive == 1){
+            if (Invaders[i].isAlive == True && bullet.isAlive == True){
                 if(checkCollision(Invaders[i], bullet) == True){
-                    Invaders[i].isAlive = 0;
-                    bullet.isAlive = 0;
+                    Invaders[i].isAlive = False;
+                    bullet.isAlive = False;
                     bullet.position.y = 950;
                     score++;
                     // Update Score string
@@ -345,34 +397,59 @@ int main() {
                 }
             }
         }
+        // Checks collision between bullet or laser with any defenses
+        for(int i = 0; i< 30; i++){
+            if(Defences[i].isAlive == True && bullet.isAlive == True){
+                if(checkCollision(Defences[i],bullet)){
+                    Defences[i].isAlive = False;
+                    bullet.isAlive = False;
+                    bullet.position.y = 950;
+                    sfSound_play(invaderExplosionSound);
+
+                }
+            }
+            if(Defences[i].isAlive == True && laser.isAlive == True){
+                if(checkCollision(Defences[i],laser)){
+                    Defences[i].isAlive = False;
+                    laser.isAlive = False;
+                    laser.position.y = 950;
+                    sfSound_play(invaderExplosionSound);
+
+                }
+            }
+        }
         // Check if player loses
         for (int i = 0; i < 20; i++) {
-            if (Invaders[i].isAlive == 1 && Invaders[i].position.y + 48 >= 700) {
-                player.isAlive = 0;
+            if (Invaders[i].isAlive == True && Invaders[i].position.y + 48 >= 700) {
+                player.isAlive = False;
             }
         }
         // Check if player was hit by Invader laser
-        if ((laser.position.y >= 714) &&
-            ((laser.position.x >= player.position.x && laser.position.x <= player.position.x + 64) ||
-             (laser.position.x + 15 >= player.position.x && laser.position.x + 15 <= player.position.x + 64))) {
-            player.isAlive = 0;
+        if (checkCollision(laser,player)) {
+            player.isAlive = False;
             gameStatus = GameOver;
         }
         // Destroys bullet if its out of top border
         if (bullet.position.y <= -64) {
-            bullet.isAlive = 0;
+            bullet.isAlive = False;
         }
         if (laser.position.y >= (float) windowSize.height + 30) {
-            laser.isAlive = 0;
+            laser.isAlive = False;
         }
         // Draws all alive invaders
         for (int i = 0; i < 20; ++i) {
-            if (Invaders[i].isAlive != 0) {
+            if (Invaders[i].isAlive !=False) {
                 sfSprite_setPosition(Invaders[i].pointer, Invaders[i].position);
                 sfRenderWindow_drawSprite(window, Invaders[i].pointer, NULL);
             }
         }
-        if (player.isAlive == 1) {
+        // Draws all alive defences
+        for (int i = 0; i < 30; ++i) {
+            if (Defences[i].isAlive != False) {
+                sfRenderWindow_drawSprite(window, Defences[i].pointer, NULL);
+            }
+        }
+        if (player.isAlive == True) {
             sfRenderWindow_drawSprite(window, player.pointer, NULL);
         }
         if(gameStatus == Running){
@@ -395,6 +472,10 @@ int main() {
     for (int i = 0; i < 20; i++) {
         sfSprite_destroy(Invaders[i].pointer);
         sfTexture_destroy(Invaders[i].texture);
+    };
+    for (int i = 0; i < 30; i++) {
+        sfSprite_destroy(Defences[i].pointer);
+        sfTexture_destroy(Defences[i].texture);
     };
     sfRenderWindow_destroy(window);
     return 0;
