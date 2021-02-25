@@ -129,13 +129,15 @@ int main() {
     // Setting up spaceship's bullet
     int randomInvader;
     Sprite bullet;
-    bullet = createSprite("bullet.png", 0, playerStartingPosition, 0.1, 10, 26);
+    bullet = createSprite("bullet.png", 0, playerStartingPosition, 0.3, 10, 26);
     sfSprite_setPosition(bullet.pointer, playerStartingPosition);
 
     // Setting up Earth Invaders x
     Sprite Invaders[20];
     int invaderPositioner = 50;
-    for (int i = 0; i < 20; ++i) {
+    int invadersNumber = sizeof(Invaders) / sizeof(*Invaders);
+
+    for (int i = 0; i < invadersNumber; ++i) {
         sfVector2f invaderStartingPosition = {(float) 10 + (i % 5 * (invaderPositioner + 30)), 35};
         Invaders[i] = createSprite("ufo.png", 1, invaderStartingPosition, 0.025, 35, 32);
         if (i >= 5) {
@@ -146,7 +148,7 @@ int main() {
     }
     // Setting up Invaders' lasers
     Sprite laser;
-    laser = createSprite("beams.png", 0, Invaders[0].position, 0.4, 15, 19);
+    laser = createSprite("beams.png", 0, Invaders[0].position, 0.35, 15, 19);
     sfSprite_setPosition(laser.pointer, laser.position);
 
     // Setting up defences
@@ -174,25 +176,18 @@ int main() {
         Defences[i] = createSprite("defense.png",1,defencePosition,0,40,40);
         sfSprite_setPosition(Defences[i].pointer, Defences[i].position);
     }
-//    counter = 0;
-//    for(int i = 12; i < 24; i++){
-//        sfVector2f defencePosition = {100 + (counter * 40) + ((counter / 4) * 160), 600};
-//        counter++;
-//        Defences[i] = createSprite("defense.png",1,defencePosition,0,20,20);
-//        sfSprite_setPosition(Defences[i].pointer, Defences[i].position);
-//    }
 
     while (sfRenderWindow_isOpen(window)) {
 
-        time(&endCounter);
-        frameCounterTimeDif = difftime(endCounter,startCounter);
-        if(frameCounterTimeDif <= 1) {
-            frameCounter++;
-        } else {
-            time(&startCounter);
-            printf("player speed: %f\n", (1387.0 / frameCounter));
-            frameCounter = 0;
-        }
+//        time(&endCounter);
+//        frameCounterTimeDif = difftime(endCounter,startCounter);
+//        if(frameCounterTimeDif <= 1) {
+//            frameCounter++;
+//        } else {
+//            time(&startCounter);
+//            printf("player speed: %f\n", (1387.0 / frameCounter));
+//            frameCounter = 0;
+//        }
 
         mouseCoordinates.position.x = (float)sfMouse_getPosition(window).x;
         mouseCoordinates.position.y = (float)sfMouse_getPosition(window).y;
@@ -249,9 +244,8 @@ int main() {
             continue;
 
         } else if (gameStatus == GameOver) {
-
             // Reset Game Variables to initial
-            for(int i = 0; i< 20; i++){
+            for(int i = 0; i< invadersNumber; i++){
                 sfVector2f invaderStartingPosition = {(float) 10 + (i % 5 * (invaderPositioner + 30)), 35};
                 if (i >= 5) {
                     invaderStartingPosition.y = (i / 5) * 70 + invaderStartingPosition.y;
@@ -266,6 +260,31 @@ int main() {
             laser.position = Invaders[0].position;
             sfSprite_setPosition(player.pointer, playerStartingPosition);
             sfSprite_setPosition(laser.pointer, laser.position);
+
+            counter = 0;
+            rowCounter = 0;
+            for(int i = 0; i < 24; i++){
+                sfVector2f defencePosition = {100 + (counter * 40) + ((counter / 4) * 160), 560 + (rowCounter * 40)};
+                counter++;
+                Defences[i] = createSprite("defense.png",1,defencePosition,0,40,40);
+                sfSprite_setPosition(Defences[i].pointer, Defences[i].position);
+                if(counter % 12 == 0){
+                    counter = 0;
+                    rowCounter++;
+                }
+            }
+            counter = 0;
+            for(int i = 24; i <  30; i++){
+                sfVector2f defencePosition = {100 + (counter * 40) + ((counter / 4) * 160), 560 + (rowCounter * 40)};
+                if(i % 2 == 0){
+                    counter+=3;
+                } else {
+                    counter++;
+                }
+                Defences[i] = createSprite("defense.png",1,defencePosition,0,40,40);
+                sfSprite_setPosition(Defences[i].pointer, Defences[i].position);
+            }
+
             // End of reset instructions
 
             // Score text
@@ -418,37 +437,49 @@ int main() {
                 }
             }
         }
+
         // Check if player loses
         for (int i = 0; i < 20; i++) {
             if (Invaders[i].isAlive == True && Invaders[i].position.y + 48 >= 700) {
                 player.isAlive = False;
             }
         }
+
         // Check if player was hit by Invader laser
         if (checkCollision(laser,player)) {
             player.isAlive = False;
             gameStatus = GameOver;
         }
+        // Check if player wins
+        if(score == invadersNumber){
+            player.isAlive = False;
+            gameStatus = GameOver;
+
+        }
         // Destroys bullet if its out of top border
         if (bullet.position.y <= -64) {
             bullet.isAlive = False;
         }
+
         if (laser.position.y >= (float) windowSize.height + 30) {
             laser.isAlive = False;
         }
+
         // Draws all alive invaders
-        for (int i = 0; i < 20; ++i) {
+        for (int i = 0; i < invadersNumber ; ++i) {
             if (Invaders[i].isAlive !=False) {
                 sfSprite_setPosition(Invaders[i].pointer, Invaders[i].position);
                 sfRenderWindow_drawSprite(window, Invaders[i].pointer, NULL);
             }
         }
+
         // Draws all alive defences
         for (int i = 0; i < 30; ++i) {
             if (Defences[i].isAlive != False) {
                 sfRenderWindow_drawSprite(window, Defences[i].pointer, NULL);
             }
         }
+
         if (player.isAlive == True) {
             sfRenderWindow_drawSprite(window, player.pointer, NULL);
         }
@@ -456,9 +487,9 @@ int main() {
             sfRenderWindow_drawText(window, scoreText, NULL);
         }
 
+
         sfRenderWindow_display(window);
     }
-
     // Cleanup
     sfSprite_destroy(player.pointer);
     sfTexture_destroy(player.texture);
