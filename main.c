@@ -8,7 +8,6 @@
 #include <SFML/Window.h>
 #include <time.h>
 #include <stdlib.h>
-#include <chipmunk/chipmunk.h>
 
 #define GameOver 2
 #define Starting 3
@@ -18,10 +17,9 @@
 
 int main() {
     char windowTitle[20] = "Space Invaders";
-    sfVideoMode windowSize = {1000, 800, 32};
+    sfVideoMode windowSize = {1000, 700, 32};
     sfRenderWindow *window;
     sfEvent event;
-    cpSpace *space = cpSpaceNew();
     int gameStatus = Starting;
 
     // Setting up window
@@ -107,7 +105,7 @@ int main() {
     int score = 0;
 
     sfText *scoreText = sfText_create();
-    sfVector2f scoreTextPosition = {10, (float)windowSize.height - 40};
+    sfVector2f scoreTextPosition = {10, 0};
     char scoreTextString[20] ;
     snprintf(scoreTextString, 20, "Score: %d", score);
     sfText_setString(scoreText, scoreTextString);
@@ -118,45 +116,47 @@ int main() {
 
     // Moves spaceship to the window border if it tries to go outside
     // Setting up player's spaceship
-    sfVector2f playerStartingPosition = {(float) windowSize.width / 2 - 32, 700};
-    sfVector2f spaceshipSticksToLeftBorder = {0, 700};
-    sfVector2f spaceshipSticksToRightBorder = {736, 700};
+    sfVector2f playerStartingPosition = {(float) windowSize.width / 2 - 32, 632};
+    sfVector2f spaceshipSticksToLeftBorder = {0, 632};
+    sfVector2f spaceshipSticksToRightBorder = {736, 632};
     Sprite player;
-    player = createSprite("player.png", 1, playerStartingPosition, 0.2, 64, 64);
+    player = createSprite("player.png", 1, playerStartingPosition, 0.9, 64, 64);
     sfSprite_setPosition(player.pointer, playerStartingPosition);
 
 
     // Setting up spaceship's bullet
     int randomInvader;
     Sprite bullet;
-    bullet = createSprite("bullet.png", 0, playerStartingPosition, 0.3, 10, 26);
+    bullet = createSprite("bullet.png", 0, playerStartingPosition, 1.1, 10, 26);
     sfSprite_setPosition(bullet.pointer, playerStartingPosition);
 
     // Setting up Earth Invaders x
     Sprite Invaders[20];
     int invaderPositioner = 50;
     int invadersNumber = sizeof(Invaders) / sizeof(*Invaders);
-
+    double invaderSpeed = 0.2;
     for (int i = 0; i < invadersNumber; ++i) {
-        sfVector2f invaderStartingPosition = {(float) 10 + (i % 5 * (invaderPositioner + 30)), 35};
-        Invaders[i] = createSprite("ufo.png", 1, invaderStartingPosition, 0.025, 35, 32);
+        sfVector2f invaderStartingPosition = {(float) 10 + (i % 5 * (invaderPositioner + 30)), 5};
+        Invaders[i] = createSprite("ufo.png", 1, invaderStartingPosition, invaderSpeed, 35, 32);
         if (i >= 5) {
-            invaderStartingPosition.y = (i / 5) * 70 + invaderStartingPosition.y;
+            invaderStartingPosition.y = (i / 5) * 50 + invaderStartingPosition.y;
         }
         Invaders[i].position = invaderStartingPosition;
         sfSprite_setPosition(Invaders[i].pointer, invaderStartingPosition);
     }
     // Setting up Invaders' lasers
     Sprite laser;
-    laser = createSprite("beams.png", 0, Invaders[0].position, 0.35, 15, 19);
+    double laserSpeed = 1.7;
+    laser = createSprite("beams.png", 0, Invaders[0].position, laserSpeed, 15, 19);
     sfSprite_setPosition(laser.pointer, laser.position);
 
     // Setting up defences
     Sprite Defences[30];
     int counter = 0;
     int rowCounter = 0;
+    int defenceLine = 510;
     for(int i = 0; i < 24; i++){
-        sfVector2f defencePosition = {100 + (counter * 40) + ((counter / 4) * 160), 560 + (rowCounter * 40)};
+        sfVector2f defencePosition = {100 + (counter * 40) + ((counter / 4) * 160), defenceLine + (rowCounter * 40)};
         counter++;
         Defences[i] = createSprite("defense.png",1,defencePosition,0,40,40);
         sfSprite_setPosition(Defences[i].pointer, Defences[i].position);
@@ -167,7 +167,7 @@ int main() {
     }
     counter = 0;
     for(int i = 24; i <  30; i++){
-        sfVector2f defencePosition = {100 + (counter * 40) + ((counter / 4) * 160), 560 + (rowCounter * 40)};
+        sfVector2f defencePosition = {100 + (counter * 40) + ((counter / 4) * 160), defenceLine + (rowCounter * 40)};
         if(i % 2 == 0){
             counter+=3;
         } else {
@@ -246,7 +246,7 @@ int main() {
         } else if (gameStatus == GameOver) {
             // Reset Game Variables to initial
             for(int i = 0; i< invadersNumber; i++){
-                sfVector2f invaderStartingPosition = {(float) 10 + (i % 5 * (invaderPositioner + 30)), 35};
+                sfVector2f invaderStartingPosition = {(float) 10 + (i % 5 * (invaderPositioner + 30)), 5};
                 if (i >= 5) {
                     invaderStartingPosition.y = (i / 5) * 70 + invaderStartingPosition.y;
                 }
@@ -264,7 +264,7 @@ int main() {
             counter = 0;
             rowCounter = 0;
             for(int i = 0; i < 24; i++){
-                sfVector2f defencePosition = {100 + (counter * 40) + ((counter / 4) * 160), 560 + (rowCounter * 40)};
+                sfVector2f defencePosition = {100 + (counter * 40) + ((counter / 4) * 160), defenceLine + (rowCounter * 40)};
                 counter++;
                 Defences[i] = createSprite("defense.png",1,defencePosition,0,40,40);
                 sfSprite_setPosition(Defences[i].pointer, Defences[i].position);
@@ -275,7 +275,7 @@ int main() {
             }
             counter = 0;
             for(int i = 24; i <  30; i++){
-                sfVector2f defencePosition = {100 + (counter * 40) + ((counter / 4) * 160), 560 + (rowCounter * 40)};
+                sfVector2f defencePosition = {100 + (counter * 40) + ((counter / 4) * 160), defenceLine + (rowCounter * 40)};
                 if(i % 2 == 0){
                     counter+=3;
                 } else {
@@ -440,8 +440,9 @@ int main() {
 
         // Check if player loses
         for (int i = 0; i < 20; i++) {
-            if (Invaders[i].isAlive == True && Invaders[i].position.y + 48 >= 700) {
+            if (Invaders[i].isAlive == True && Invaders[i].position.y + 48 >= defenceLine) {
                 player.isAlive = False;
+                gameStatus = GameOver;
             }
         }
 
