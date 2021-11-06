@@ -1,7 +1,10 @@
 # Space Invader
 
-This is CORE 2 coursework project for my studies.
-
-It is a clone of well known game from 70s Space Invaders.
-
-It is fully written in C and its interface API CSFML.
+This is well known game from 70's called Space Invaders.
+It is written in C with CSFML library.Rules are the same as the in the original game.
+At the end of the level game displays score which the player got. Destroying one ufo ship is worth 1 point. 
+## **Menu Snapshot**
+![Menu snapshot](readme-assets/menu.PNG)
+## **Gameplay snapshot**
+![Gameplay snapshot](readme-assets/gameplay.PNG)
+    
